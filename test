@@ -1,0 +1,83 @@
+<template>
+  <a-card style="width: 500px;">
+    <div class="category-container">
+      <template v-for="(tools, category) in groupedTools" :key="category">
+        <a-card :title="category" :style="{ marginBottom: '16px', width: calculateCardWidth(tools) + 'px' }">
+          <div class="tools-container">
+            <div v-for="tool in tools" :key="tool.id" class="tool-card">
+              <a-avatar :icon="tool.icon" />
+              <span>{{ tool.name }}</span>
+            </div>
+          </div>
+        </a-card>
+      </template>
+    </div>
+  </a-card>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
+
+const dataSource = ref([]);
+
+// 按类别分组工具数据
+const groupedTools = computed(() => {
+  return dataSource.value.reduce((acc, tool) => {
+    if (!acc[tool.category]) {
+      acc[tool.category] = [];
+    }
+    acc[tool.category].push(tool);
+    return acc;
+  }, {});
+});
+
+// 计算每个类别卡片的宽度
+const calculateCardWidth = (tools) => {
+  const cardPadding = 28; //卡片内置的padding 样式
+  const toolCardWidth = 100; // 每个icon宽度为 100px
+  // const gap = 16;
+
+  const toolCount = tools.length;
+  const cardWidth = toolCount * toolCardWidth   + cardPadding*2;
+  console.log("cardWidth",cardWidth)
+  return cardWidth;
+};
+
+// 组件挂载时获取数据
+onMounted(async () => {
+  try {
+    const response = await axios.get('/tool/list');
+    dataSource.value = response.data;
+  } catch (error) {
+    console.error(error);
+  }
+});
+</script>
+
+<style scoped>
+.category-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px; /* 卡片之间的间距 */
+}
+
+.tools-container {
+  display: flex;
+  flex-wrap: wrap;
+
+}
+
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px; /* 默认宽度 */
+  margin-bottom: 16px; /* 调整每个小卡片底部间距 */
+}
+
+.tool-card span {
+  margin-top: 8px; /* 调整图标和名称之间的间距 */
+  text-align: center;
+}
+</style>
